@@ -1,3 +1,6 @@
+require 'fastlane/action'
+require_relative '../helper/jira_tempo_helper'
+
 module Fastlane
   module Actions
     module SharedValues
@@ -8,7 +11,7 @@ module Fastlane
       def self.run(params)
         ticket = params[:ticket]
         time_in_hours = params[:time]
-        time_in_hours = time_in_hours.sub('h', '') if time_in_hours.include?("h")
+        time_in_hours = time_in_hours.sub("h", "") if time_in_hours.include?("h")
         time_in_seconds = time_in_hours.to_f * 3600
 
         if params[:date]
@@ -27,7 +30,7 @@ module Fastlane
           billableSeconds: time_in_seconds,
           startDate: date,
           startTime: "00:00:00",
-          description: "Spent time on ticket #{ticket}",
+          description: "Spent #{time_in_hours}h time on ticket #{ticket}",
           authorAccountId: params[:account_id],
           attributes: [
             params[:attributes]
@@ -37,7 +40,7 @@ module Fastlane
         TempoApiAction.run(
           http_method: "POST",
           server_url: "https://api.tempo.io",
-          api_token: params[:tempo_api_token],
+          api_token: params[:api_token],
           path: "/core/3/worklogs",
           body: payload,
           error_handlers: {
@@ -70,7 +73,7 @@ module Fastlane
 
       def self.available_options
         [
-          FastlaneCore::ConfigItem.new(key: :tempo_api_token,
+          FastlaneCore::ConfigItem.new(key: :api_token,
                                        env_name: "FL_CREATE_TEMPO_WORKLOG_API_TOKEN",
                                        description: "Personal API Token for Tempo",
                                        sensitive: true,
