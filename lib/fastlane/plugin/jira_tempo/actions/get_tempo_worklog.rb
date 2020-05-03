@@ -10,7 +10,13 @@ module Fastlane
     class GetTempoWorklogAction < Action
       def self.run(params)
         path = "/core/3/worklogs"
-        path = path + "?issue=#{params[:ticket]}" if params[:ticket]
+        if params[:ticket]
+          path = path + "?issue=#{params[:ticket]}"
+        else
+          todayDate = Date.today.to_s
+          firstDayOfCurrentMonth = Time.parse(todayDate).strftime("%Y-%m-01")
+          path = path + "?from=#{firstDayOfCurrentMonth}&to=#{todayDate}&limit=1000"
+        end
 
         TempoApiAction.run(
           server_url: "https://api.tempo.io",
@@ -26,7 +32,7 @@ module Fastlane
           require 'terminal-table'
 
           logs = result["results"].sort_by { |log| log["startDate"] }.map { |log| [log["tempoWorklogId"], log["issue"]["key"], log["startDate"], "#{log["timeSpentSeconds"]}|#{log["timeSpentSeconds"]/3600}h"] }
-          table = Terminal::Table.new(title: "Tempo logs", headings: ['Tempo Id', 'Ticket', 'Start date', 'Time (in s|h)'], rows: logs)
+          table = Terminal::Table.new(title: "Tempo logs", headings: ['Tempo Id', 'Ticket', 'Start date', 'Time (in s|h)'], rows: logs.reverse)
           puts table
 
           Actions.lane_context[SharedValues::GET_TEMPO_WORKLOG_RESULT] = result
