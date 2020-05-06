@@ -31,8 +31,8 @@ module Fastlane
         ) do |result|
           require 'terminal-table'
 
-          logs = result["results"].sort_by { |log| log["startDate"] }.map { |log| [log["tempoWorklogId"], log["issue"]["key"], log["startDate"], "#{log["timeSpentSeconds"]}|#{log["timeSpentSeconds"]/3600}h"] }
-          table = Terminal::Table.new(title: "Tempo logs", headings: ['Tempo Id', 'Ticket', 'Start date', 'Time (in s|h)'], rows: logs.reverse)
+          logs = result["results"].sort_by { |log| log["startDate"] }.map { |log| [log["tempoWorklogId"], log["issue"]["key"], log["startDate"], "#{log["timeSpentSeconds"].to_f/3600}h"] }
+          table = Terminal::Table.new(title: "Tempo logs", headings: ['Tempo Id', 'Ticket', 'Start date', 'Time(Hours)'], rows: logs.reverse)
           puts table
 
           Actions.lane_context[SharedValues::GET_TEMPO_WORKLOG_RESULT] = result
