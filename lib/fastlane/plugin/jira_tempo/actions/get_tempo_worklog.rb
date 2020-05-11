@@ -31,8 +31,29 @@ module Fastlane
         ) do |result|
           require 'terminal-table'
 
-          logs = result["results"].sort_by { |log| log["startDate"] }.map { |log| [log["tempoWorklogId"], log["issue"]["key"], log["startDate"], "#{log["timeSpentSeconds"].to_f/3600}h"] }
-          table = Terminal::Table.new(title: "Tempo logs", headings: ['Tempo Id', 'Ticket', 'Start date', 'Time(Hours)'], rows: logs.reverse)
+          logs = result["results"].sort_by { |log| log["startDate"] }.map do |log|
+            date_day = Date.parse(log["startDate"]).strftime("%a")
+            [log["tempoWorklogId"], log["issue"]["key"], "#{log["startDate"]}|#{date_day}", "#{log["timeSpentSeconds"].to_f/3600}h"]
+          end
+          group_by_logs = logs.reverse.group_by {|x| x[2]}
+
+          table = Terminal::Table.new do |t|
+            t.title = "Tempo logs"
+            t.headings = ['Tempo Id', 'Ticket', 'Date|Day', 'Time(Hours)']
+            t.style = { :border_bottom => false }
+            group_by_logs.each do |key, value|
+              total_time_in_hours = 0.0
+              value.each do |v|
+                t.add_row v
+                time_in_hours = v[3].sub("h", "").to_f
+                total_time_in_hours += time_in_hours
+              end
+              t.add_separator
+              t.add_row ["", "", "", "Total: #{total_time_in_hours}h"]
+              t.add_separator
+            end
+          end
+
           puts table
 
           Actions.lane_context[SharedValues::GET_TEMPO_WORKLOG_RESULT] = result
